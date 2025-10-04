@@ -1,0 +1,146 @@
+2020年9月に活動した異なるユーザー数をsub（種類）ごとに集計し、降順で出す
+
+SELECT
+    sub,
+    COUNT(DISTINCT mn_id) AS count_uu -- 異なるユーザー数をカウント
+FROM
+    acts_output
+WHERE
+    DATE_FORMAT(DATE(time), '%Y-%m-01') = '2020-09-01' -- 2020年9月のデータに限定
+GROUP BY
+    sub
+ORDER BY
+    count_uu DESC; -- ユーザー数の多い順に並べる
+
++-----------------------------+----------+
+| sub                         | count_uu |
++-----------------------------+----------+
+| main                        |      108 |
+| practice_c                  |       99 |
+| id_make_c                   |       90 |
+| card_reg_basic_c            |       82 |
+| game_test_go                |       81 |
+| story                       |       81 |
+| game                        |       78 |
+| game_manga_save             |       78 |
+| tutorial                    |       76 |
+| practice                    |       72 |
+| tutorial_next               |       68 |
+| player                      |       66 |
+| game_practice               |       63 |
+| card_detail                 |       61 |
+| card_list                   |       59 |
+| box                         |       57 |
+| game_practice_go            |       57 |
+| order                       |       53 |
+| manager                     |       49 |
+| practice_chall              |       49 |
+| card_policy                 |       48 |
+| game_test                   |       48 |
+| get_card                    |       47 |
+| game_of_reg                 |       46 |
+| union_set                   |       44 |
+| get_card_result             |       43 |
+| card_reg_bt                 |       42 |
+| card_reg_pc                 |       42 |
+| tutorial_finish             |       42 |
+| info                        |       40 |
+| login                       |       38 |
+| manager_change              |       37 |
+| card_item                   |       36 |
+| practice_chall_f            |       36 |
+| card_power                  |       35 |
+| practice_training           |       35 |
+| senario                     |       35 |
+| manager_point               |       34 |
+| manager_point_up            |       34 |
+| item                        |       32 |
+| adj_pc                      |       30 |
+| adj_bt                      |       29 |
+| card_training               |       29 |
+| senario_play                |       29 |
+| practice_training_go        |       28 |
+| card_lvup                   |       27 |
+| map_json_user               |       27 |
+| practice_map                |       27 |
+| senario_go                  |       27 |
+| card_original               |       26 |
+| union_main                  |       26 |
+| adj_order_bt                |       25 |
+| card_original_list          |       25 |
+| game_of_list                |       25 |
+| card_skill_power            |       23 |
+| get_item_comb               |       23 |
+| union_reg_bt                |       23 |
+| union_reg_pc                |       23 |
+| card_reg_basic              |       22 |
+| practice_chall_pf           |       22 |
+| card_original_make          |       21 |
+| union_game_regist           |       21 |
+| card_original_select        |       20 |
+| game_of_detail              |       20 |
+| map_json_item               |       20 |
+| senario_next                |       20 |
+| team_search                 |       20 |
+| union_adj_df                |       20 |
+| union_order                 |       20 |
+| archive                     |       19 |
+| card_adj_pc                 |       19 |
+| card_adj_bt                 |       18 |
+| union_adj_pitch             |       18 |
+| union_game                  |       18 |
+| card_training_c             |       17 |
+| game_of                     |       17 |
+| game_regist                 |       17 |
+| card_sleep                  |       16 |
+| practice_training_set_mgame |       16 |
+| game_of_sf                  |       15 |
+| manager_item                |       15 |
+| practice_training_mgame     |       15 |
+| union_game_go               |       15 |
+| union_reg                   |       15 |
+| union_reg_c                 |       15 |
+| card_change                 |       14 |
+| game_data_b                 |       14 |
+| union_archive               |       14 |
+| manager_change_ok           |       13 |
+| union_adj_pc                |       13 |
+| union_order_bt              |       12 |
+| union_search                |       12 |
+| get_card_point              |       11 |
+| union_adj_bt                |       11 |
+| card_adj_pc_style           |       10 |
+| card_convert                |       10 |
+| game_data_p                 |       10 |
+| card_del                    |        9 |
+| card_sleep_c                |        9 |
+| union_manager               |        9 |
+| item_exchange               |        8 |
+| item_sell_check             |        7 |
+| card_del_c                  |        6 |
+| game_data_all_p             |        6 |
+| manager_mail                |        6 |
+| practice_cxl                |        6 |
+| game_data_res_b             |        5 |
+| item_exchange_c             |        5 |
+| pay_point                   |        5 |
+| card_change_c               |        4 |
+| game_data_detail            |        4 |
+| game_of_next                |        4 |
+| game_test_progress          |        4 |
+| manager_mail_send           |        4 |
+| union_manager_change        |        4 |
+| game_of_progress            |        3 |
+| manager_mail_check          |        3 |
+| union_chat                  |        3 |
+| game_data_all_b             |        2 |
+| game_data_res_p             |        2 |
+| pay_list                    |        2 |
+| union_data_b                |        2 |
+| union_data_p                |        2 |
+| card_convert_c              |        1 |
+| manager_pwd_check           |        1 |
+| manager_pwd_send            |        1 |
+| pay_order                   |        1 |
++-----------------------------+----------+
+127 rows in set (0.09 sec)
