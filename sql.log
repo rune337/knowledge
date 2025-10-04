@@ -1,0 +1,216 @@
+データベース作成
+create acts_output; 
+
+データベース使用
+use acts_output;
+
+テーブル作成
+CREATE TABLE acts_output (
+  id INT PRIMARY KEY,
+  mn_id INT,
+  `time` DATETIME,
+  sub VARCHAR(255),
+  action VARCHAR(255)
+);
+
+テーブル構造（カラムと型）を見る
+DESCRIBE acts_output;
+
+LOAD DATA INFILE '/root/acts_output.csv' INTO TABLE acts_output
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES;
+
+
+インポートするデータベース最初の3行
+これに合わせてテーブル作成
+id,mn_id,time,sub,action
+1071169,259,2020-08-01 00:21:25,login,
+1071170,259,2020-08-01 00:21:27,main,
+
+インポートするとファイルの読み込み場所を制限しているエラー
+LOAD DATA INFILE '/root/acts_output.csv' INTO TABLE acts_output
+    -> FIELDS TERMINATED BY ','
+    -> LINES TERMINATED BY '\n'
+    -> IGNORE 1 LINES;
+ERROR 1290 (HY000): The MySQL server is running with the --secure-file-priv option so it cannot execute this statement
+
+どこなら読み込めるか確認
+SHOW VARIABLES LIKE 'secure_file_priv';
++------------------+-----------------------+
+| Variable_name    | Value                 |
++------------------+-----------------------+
+| secure_file_priv | /var/lib/mysql-files/ |
++------------------+-----------------------+
+1 row in set (0.01 sec)
+
+ファイルを/var/lib/mysql-files/に移動
+
+ファイルを/var/lib/mysql-files/acts_output.csvに変更
+LOAD DATA INFILE '/var/lib/mysql-files/acts_output.csv' INTO TABLE acts_output
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES;
+
+権限ないエラー出力
+mysql> LOAD DATA INFILE '/var/lib/mysql-files/acts_output.csv' INTO TABLE acts_output
+    -> FIELDS TERMINATED BY ','
+    -> LINES TERMINATED BY '\n'
+    -> IGNORE 1 LINES;
+ERROR 13 (HY000): Can't get stat of '/var/lib/mysql-files/acts_output.csv' (OS errno 13 - Permission denied)
+
+MySQL サーバーがファイルを読むために所有者を mysql に変更
+sudo chown mysql:mysql /var/lib/mysql-files/acts_output.csv
+
+chmod 644 → 読み込み権限を付与（所有者は読み書き、他は読み込み）
+sudo chmod 644 /var/lib/mysql-files/acts_output.csv
+
+
+またエラー、まだパーミッションエラー
+
+LOAD DATA INFILE '/var/lib/mysql-files/acts_output.csv' INTO TABLE acts_output -> FIELDS TERMINATED BY ',' -> LINES TERMINATED BY '\n' -> IGNORE 1 LINES; ERROR 13 (HY000): Can't get stat of '/var/lib/mysql-files/acts_output.csv' (OS errno 13 - Permission denied)
+
+MySQL 実行ユーザーを確認
+ps aux | grep mysqld
+mysql        924  0.6  8.6 1846604 512684 ?      Ssl  15:59   0:15 /usr/sbin/mysqld
+root        1719  0.0  0.0   3720  1748 pts/0    S+   16:43   0:00 grep --color=auto mysqld
+
+ディレクトリにも付与
+MySQL 実行ユーザーがファイルとディレクトリにアクセスできるようにします。
+sudo chown mysql:mysql /var/lib/mysql-files/acts_output.csv
+sudo chmod 644 /var/lib/mysql-files/acts_output.csv
+sudo chown mysql:mysql /var/lib/mysql-files
+sudo chmod 755 /var/lib/mysql-files
+
+
+またエラー
+mysql> LOAD DATA INFILE '/var/lib/mysql-files/acts_output.csv' INTO TABLE acts_output
+    -> FIELDS TERMINATED BY ','
+    -> LINES TERMINATED BY '\n'
+    -> IGNORE 1 LINES;
+ERROR 13 (HY000): Can't get stat of '/var/lib/mysql-files/acts_output.csv' (OS errno 13 - Permission denied)
+
+SELinuxのせいかもしれないので確認
+SELinux の状態確認
+もし出力が Enforcing なら、SELinux が有効です。
+[root@localhost mysql-files]# getenforce
+Enforcing
+
+一時的に SELinux を無効化（テスト用）
+[root@localhost mysql-files]# 
+[root@localhost mysql-files]# sudo setenforce 0
+[root@localhost mysql-files]# 
+
+
+またエラー、今度はcsvデータがテーブルデータ構造に対して列が多い
+mysql> 
+mysql> LOAD DATA INFILE '/var/lib/mysql-files/acts_output.csv' INTO TABLE acts_output
+    -> FIELDS TERMINATED BY ','
+    -> LINES TERMINATED BY '\n'
+    -> IGNORE 1 LINES;
+ERROR 1262 (01000): Row 4 was truncated; it contained more data than there were input columns
+
+アクションの中のデータ",,"になっているので、
+""の中の,を無視にする
+これはテーブル構造なのでここからどこのデータが多いか見えない
+CSVを見る必要がある
+mysql> DESCRIBE acts_output;
++--------+--------------+------+-----+---------+-------+
+| Field  | Type         | Null | Key | Default | Extra |
++--------+--------------+------+-----+---------+-------+
+| id     | int          | NO   | PRI | NULL    |       |
+| mn_id  | int          | YES  |     | NULL    |       |
+| time   | datetime     | YES  |     | NULL    |       |
+| sub    | varchar(255) | YES  |     | NULL    |       |
+| action | varchar(255) | YES  |     | NULL    |       |
++--------+--------------+------+-----+---------+-------+
+5 rows in set (0.01 sec)
+
+
+Csvファイル
+“”の中の,を無視する必要がある
+id,mn_id,time,sub,action
+1071169,259,2020-08-01 00:21:25,login,
+1071170,259,2020-08-01 00:21:27,main,
+1071171,256,2020-08-01 00:21:30,main,
+1071172,259,2020-08-01 00:21:36,practice_c,"kiai_mini,kiai_mini,md5_mini,kiai_mini,kiai_mini"
+1071173,259,2020-08-01 00:21:36,main,
+1071174,256,2020-08-01 00:21:38,practice_c,"kiai_mini,kiai_mini,kiai"
+1071175,256,2020-08-01 00:21:38,main,
+
+
+ENCLOSED BY '"' を指定することで、MySQLは "..." の中のカンマを区切りとして無視します。
+列を明示的に (id, mn_id, time, sub, action) と指定します。
+LOAD DATA INFILE '/var/lib/mysql-files/acts_output.csv'
+INTO TABLE acts_output
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(id, mn_id, `time`, sub, action);
+
+
+またエラー
+mysql> LOAD DATA INFILE '/var/lib/mysql-files/acts_output.csv'
+INTO TABLE acts_output
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(id, mn_id, `time`, sub, action);
+
+ERROR 1406 (22001): Data too long for column 'action' at row 4
+
+action カラムの型が CSV に入っているデータの長さに足りていないことを意味します。
+action カラムを TEXT 型にする（推奨
+
+mysql> ALTER TABLE acts_output MODIFY COLUMN action TEXT;
+Query OK, 0 rows affected (0.01 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+action カラムを TEXT に変更しましたが、まだエラー
+ERROR 1406 (22001): Data too long for column 'action' at row 4
+が出ています。 これは少し特殊なケースです。理由は大きく2つあります。
+
+mysql> LOAD DATA INFILE '/var/lib/mysql-files/acts_output.csv'
+    -> INTO TABLE acts_output
+    -> FIELDS TERMINATED BY ','
+    -> ENCLOSED BY '"'
+    -> LINES TERMINATED BY '\n'
+    -> IGNORE 1 LINES
+    -> (id, mn_id, `time`, sub, action);
+ERROR 1406 (22001): Data too long for column 'action' at row 4
+mysql> 
+
+CSVの中身に不可視の改行コードや特殊文字が含まれている
+MySQLは改行や制御文字を区切りとして誤認識してしまい、1列として正しく読めない場合があります。 特に行4の action 列は長く、さらに改行や非表示文字が混ざっている可能性があります。
+2. ENCLOSED BY '"' が正しく機能していない
+MySQLは " " で囲まれたフィールドを正しく認識しますが、ファイルによっては BOM（Byte Order Mark）やエンコードの問題 で失敗します。
+
+エンコードを確認
+あなたのファイルは UTF-8のCSV で、エンコード自体は問題ありません。
+ただし、今のエラー：
+
+file /var/lib/mysql-files/acts_output.csv
+/var/lib/mysql-files/acts_output.csv: CSV Unicode text, UTF-8 text
+
+改行コード統一
+sudo yum install dos2unix -y
+
+dos2unix /var/lib/mysql-files/acts_output.csv
+dos2unix: converting file /var/lib/mysql-files/acts_output.csv to Unix format...
+
+
+実行
+mysql> LOAD DATA INFILE '/var/lib/mysql-files/acts_output.csv'
+    -> INTO TABLE acts_output
+    -> FIELDS TERMINATED BY ','
+    -> OPTIONALLY ENCLOSED BY '"'
+    -> LINES TERMINATED BY '\n'
+    -> IGNORE 1 LINES
+    -> (id, mn_id, `time`, sub, action);
+Query OK, 142565 rows affected (0.36 sec)
+Records: 142565  Deleted: 0  Skipped: 0  Warnings: 0
+
+mysql> 
