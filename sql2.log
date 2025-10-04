@@ -3433,5 +3433,8 @@ GROUP BY
     a.date
 ORDER BY
     a.mn_id,
-    a.date;
+    a.date
+LIMIT 10;
+
+
 
